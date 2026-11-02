@@ -164,13 +164,13 @@ ol.steps{margin:6px 0 12px;padding-left:22px}ol.steps li{margin:6px 0}
     <li>키보드 <b>윈도우 키</b> → <code>PowerShell</code> 입력 → <b>Windows PowerShell</b> 클릭(관리자로 열 필요 없음)</li>
     <li>아래 [복사]를 누르고, 파란 창에 <b>마우스 오른쪽 클릭</b>(붙여넣기) → <b>Enter</b></li>
   </ol>
-  <pre class="cmd" id="oneLine">irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1 | iex</pre>
+  <pre class="cmd" id="oneLine">irm https://raw.githubusercontent.com/wonyul01-collab/drc-ai-starter/main/install.ps1 | iex</pre>
   <ol class="steps" start="3">
     <li>중간에 <b>'이 앱이 디바이스를 변경하도록 허용하시겠어요?'</b> 창이 뜨면 <b>[예]</b></li>
     <li>마지막에 <b>'설치 끝! 빠진 것 없음'</b>이 보이면 성공. 빠진 것이 있으면 컴퓨터를 다시 켠 뒤 같은 명령을 한 번 더</li>
   </ol>
   <h3>명령이 어렵다면: 더블클릭 방식</h3>
-  <p>회사 깃허브 저장소(<a id="repoLink" href="https://github.com/__OWNER__/drc-ai-starter" target="_blank" rel="noopener">drc-ai-starter</a>) → 초록 <b>[Code]</b> → <b>Download ZIP</b> → 압축 풀기 → <b>설치.bat</b> 더블클릭</p>
+  <p>회사 깃허브 저장소(<a id="repoLink" href="https://github.com/wonyul01-collab/drc-ai-starter" target="_blank" rel="noopener">drc-ai-starter</a>) → 초록 <b>[Code]</b> → <b>Download ZIP</b> → 압축 풀기 → <b>설치.bat</b> 더블클릭</p>
   <h3>설치되는 것</h3>
   <div class="tw"><table>
     <tr><th>프로그램</th><th>하는 일</th></tr>
@@ -228,7 +228,7 @@ claude</pre>
 <section class="pane" data-cat="install" data-tab="설치 점검" data-now="빠진 것이 없는지 점검 명령으로 확인합니다.">
   <h2>설치 점검</h2>
   <p class="lead">아래 명령은 설치하지 않고 확인만 합니다. <b>[없음]</b>이 있으면 '하나씩 설치' 탭에서 그 줄만 설치하세요.</p>
-  <pre class="cmd" id="checkLine">&amp; ([scriptblock]::Create((irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1))) -OnlyCheck</pre>
+  <pre class="cmd" id="checkLine">&amp; ([scriptblock]::Create((irm https://raw.githubusercontent.com/wonyul01-collab/drc-ai-starter/main/install.ps1))) -OnlyCheck</pre>
   <p>또는 내려받은 폴더의 <b>점검.bat</b> 더블클릭.</p>
   <h3>점검 화면 예시</h3>
   <pre class="cmd">──── 설치 점검 결과 ────
@@ -571,7 +571,7 @@ claude</pre>
 
 <script>
 (function(){
-  var OWNER='__OWNER__';
+  var OWNER='wonyul01-collab';
   var CATS=[['start','시작하기'],['install','설치'],['first','첫 자동화'],['cases','회사 사례'],['ship','화면·게시·깃허브'],['media','영상·디자인'],['safe','안전 규칙'],['help','막혔을 때']];
   var panes=[].slice.call(document.querySelectorAll('.pane'));
   var store={get:function(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -579,7 +579,7 @@ claude</pre>
   var pos=store.get('drc_manual_pos')||{cat:'start',i:0};
   // 저장소 주인 반영
   document.querySelectorAll('pre.cmd, a#repoLink').forEach(function(el){
-    if(el.tagName==='A'){el.href=el.href.replace('__OWNER__',OWNER)}else{el.textContent=el.textContent.replace('__OWNER__',OWNER)}
+    if(el.tagName==='A'){el.href=el.href.replace('wonyul01-collab',OWNER)}else{el.textContent=el.textContent.replace('wonyul01-collab',OWNER)}
   });
   document.getElementById('sideCmd').textContent=document.getElementById('oneLine').textContent;
   if(OWNER.indexOf('__')===0){

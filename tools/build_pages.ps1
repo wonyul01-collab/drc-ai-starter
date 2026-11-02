@@ -1,4 +1,4 @@
-# 매뉴얼을 깃허브 페이지(docs/index.html)로 만들고, 저장소 주인 이름을 모든 파일에 넣는다.
+﻿# 매뉴얼을 깃허브 페이지(docs/index.html)로 만들고, 저장소 주인 이름을 모든 파일에 넣는다.
 param([Parameter(Mandatory)][string]$Owner)
 $root = Split-Path $PSScriptRoot -Parent
 $utf8 = New-Object Text.UTF8Encoding $false

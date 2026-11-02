@@ -1,0 +1,26 @@
+# 비밀값 - 절대 올리지 않음
+.env
+.env.*
+!.env.example
+*.ini
+*secret*
+*password*
+*_login.txt
+
+# 고객·실적 원본
+data/
+history/
+리포트/
+*.xlsx
+*.xls
+*.csv
+
+# 로그인 상태·자동 생성물
+profiles/
+.vercel/
+node_modules/
+__pycache__/
+dist/
+build/
+*.log
+debug/

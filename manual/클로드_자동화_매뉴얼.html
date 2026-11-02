@@ -1,0 +1,637 @@
+<title>클로드 자동화 개발 매뉴얼</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+/* 배치: 왼쪽 업무 묶음 240 | 위 진행 탭 + 지금 할 일 | 가운데 내용 + 오른쪽 진행 패널 340, 한 화면 */
+:root{
+  --bg:#eef0ed; --panel:#fafbf9; --ink:#1b211f; --muted:#4f5955; --line:#cdd3cf; --soft:#e2e6e2;
+  --accent:#b5651d; --accent-ink:#ffffff; --code:#1f2523; --code-ink:#f1efe8; --ok:#2f7d4f; --warn:#a4471b;
+  --font:"Pretendard","Pretendard Variable","Noto Sans KR","Malgun Gothic",sans-serif;
+  --mono:"Cascadia Mono",Consolas,"D2Coding",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171b1a; --panel:#1f2422; --ink:#e9ece9; --muted:#aab3ae; --line:#38403c; --soft:#2a302d;
+  --accent:#e08a43; --accent-ink:#1b1309; --code:#0f1211; --code-ink:#ece9df; --ok:#5fbf86; --warn:#f08a5a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171b1a; --panel:#1f2422; --ink:#e9ece9; --muted:#aab3ae; --line:#38403c; --soft:#2a302d;
+  --accent:#e08a43; --accent-ink:#1b1309; --code:#0f1211; --code-ink:#ece9df; --ok:#5fbf86; --warn:#f08a5a; color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+.app{height:100%;display:grid;grid-template-columns:240px minmax(0,1fr);overflow:hidden}
+.side{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.brand{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.brand b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.brand span{font-size:13px;color:var(--muted)}
+.cats{list-style:none;margin:0;padding:8px 0;overflow:auto;flex:1}
+.cats button{all:unset;box-sizing:border-box;width:100%;display:flex;justify-content:space-between;align-items:center;
+  padding:11px 18px;font-size:16px;cursor:pointer;border-left:4px solid transparent}
+.cats button:hover{background:var(--soft)}
+.cats button[aria-current="true"]{border-left-color:var(--accent);background:var(--soft);font-weight:700}
+.cats button:focus-visible,.tabs button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cats small{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sidefoot{padding:12px 18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.main{display:grid;grid-template-rows:auto auto minmax(0,1fr);min-height:0;min-width:0}
+.tabs{display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:14px 18px;font-size:16px;white-space:nowrap;border-bottom:3px solid transparent;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+.tabs .where{margin-left:auto;padding:14px 18px;font-size:13px;color:var(--muted);white-space:nowrap}
+.now{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 24px;border-bottom:1px solid var(--line)}
+.now p{margin:0}.now b{color:var(--accent)}
+.btn{all:unset;cursor:pointer;padding:8px 16px;border:1px solid var(--line);border-radius:4px;font-size:15px;white-space:nowrap;background:var(--panel)}
+.btn.main{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.body{display:grid;grid-template-columns:minmax(0,1fr) 340px;min-height:0}
+.content{overflow:auto;padding:22px 28px 28px;min-width:0}
+.right{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:20px}
+h2{font-size:20px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-size:16px;margin:22px 0 8px}
+.lead{color:var(--muted);margin:0 0 16px;max-width:70ch}
+table{border-collapse:collapse;width:100%;font-size:15px;margin:6px 0 12px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-size:14px;color:var(--muted);font-weight:600;background:var(--soft)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw{overflow-x:auto}
+pre.cmd{position:relative;margin:8px 0 14px;background:var(--code);color:var(--code-ink);font-family:var(--mono);font-size:14px;
+  padding:14px 92px 14px 16px;border-radius:4px;white-space:pre-wrap;word-break:break-all}
+pre.cmd button{position:absolute;top:8px;right:8px;all:unset;position:absolute;top:8px;right:8px;cursor:pointer;font-family:var(--font);
+  font-size:13px;padding:4px 10px;border:1px solid #5a625e;border-radius:3px;color:var(--code-ink)}
+code{font-family:var(--mono);font-size:14px;background:var(--soft);padding:1px 5px;border-radius:3px}
+a{color:var(--accent);font-weight:600}
+ol.steps{margin:6px 0 12px;padding-left:22px}ol.steps li{margin:6px 0}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:4px;margin:10px 0;background:var(--panel)}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent)}
+.note{border-left:4px solid var(--warn);padding:8px 12px;background:var(--soft);margin:12px 0}
+.flow{display:flex;flex-wrap:wrap;gap:0;margin:10px 0 16px}
+.flow div{flex:1 1 120px;padding:12px 14px;border:1px solid var(--line);margin:-1px 0 0 -1px;background:var(--panel)}
+.flow b{display:block;font-size:16px}.flow small{font-size:14px;color:var(--muted)}
+.flow i{font-style:normal;font-size:13px;color:var(--accent);font-weight:700}
+.right h4{font-size:16px;margin:0 0 10px}
+.bar{height:10px;background:var(--soft);border-radius:2px;overflow:hidden;margin:6px 0 4px}
+.bar span{display:block;height:100%;background:var(--accent);width:0}
+.rt{font-size:14px;color:var(--muted)}
+.rsec{padding:14px 0;border-top:1px solid var(--line)}.rsec:first-child{border-top:0;padding-top:0}
+.catbars div{display:grid;grid-template-columns:96px 1fr 44px;gap:8px;align-items:center;font-size:14px;margin:5px 0}
+.catbars em{font-style:normal;font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.mini{height:6px;background:var(--soft)}.mini span{display:block;height:100%;background:var(--accent)}
+@media (max-width:1100px){.body{grid-template-columns:minmax(0,1fr)}.right{border-left:0;border-top:1px solid var(--line)}}
+@media (max-width:900px){
+  html,body{height:auto}.app{display:block;height:auto;overflow:visible}
+  .side{border-right:0;border-bottom:1px solid var(--line)}
+  .cats{display:flex;overflow-x:auto;padding:0}.cats li{flex:0 0 auto}.cats button{border-left:0;border-bottom:3px solid transparent;padding:10px 14px}
+  .cats button[aria-current="true"]{border-bottom-color:var(--accent)}.sidefoot{display:none}
+  .now{flex-wrap:wrap;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+  .content,.right{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow:visible}
+  .body{display:block}.brand{padding-inline:max(16px,env(safe-area-inset-left,0px)) 16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <nav class="side" aria-label="업무 묶음">
+    <div class="brand"><b>클로드 자동화 개발</b><span>디알컴퍼니 직원용 · 2026-11-02 작성</span></div>
+    <ul class="cats" id="cats"></ul>
+    <div class="sidefoot">진행 체크는 이 브라우저에만 저장됩니다.<br>문의: 2본부(마케팅) 클로드 담당</div>
+  </nav>
+  <main class="main">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="now"><p id="nowText"></p><button class="btn main" id="nextBtn" type="button">다음</button></div>
+    <div class="body">
+      <div class="content" id="content">
+
+<!-- ───────── 1. 시작하기 ───────── -->
+<section class="pane" data-cat="start" data-tab="무엇을 하나" data-now="이 키트로 무엇을 할 수 있는지 3분 안에 봅니다.">
+  <h2>말로 시키면 클로드가 만들어 줍니다</h2>
+  <p class="lead">클로드 코드는 <b>말로 일을 시키는 신입 개발자</b>입니다. 우리는 감독입니다. 무엇을 원하는지 말하고, 결과를 보고, 고쳐 달라고 하면 됩니다. 코드를 몰라도 됩니다.</p>
+  <h3>회사에서 이미 이렇게 바꿨습니다</h3>
+  <div class="tw"><table>
+    <tr><th>만든 것</th><th>예전 수작업</th><th>지금</th></tr>
+    <tr><td>통합 실적센터</td><td>담당자가 8개 사이트에 각각 로그인해 엑셀을 받고 손으로 합쳐 보고</td><td>매일 06:00·09:30 자동 수집 → 엑셀·메일·웹 화면. 주소만 열면 끝</td></tr>
+    <tr><td>복지용구 현황판</td><td>공단 원본 엑셀을 달마다 열어 읽고, 정부 공지를 사이트마다 확인</td><td>원본을 폴더에 넣으면 자동 판독(68개월 검증), 공지는 매일 05:40 자동 수집</td></tr>
+    <tr><td>복지용구사업소 운영판</td><td>개소 절차·점검표를 문서로 흩어 관리</td><td>로그인되는 점검 사이트. 단계별 체크, 준수 점검 신호등, 권한 관리</td></tr>
+    <tr><td>생산 계획·자금·현황판</td><td>엑셀 공유, 구두 보고, 손으로 고치는 자금표</td><td>화면에서 입력·보고·승인, 재고 부족 빨간불 + 아침 메일</td></tr>
+  </table></div>
+  <h3>여러분이 바꿀 수 있는 일 예시</h3>
+  <p>매일 같은 사이트에 들어가 자료 받기 · 엑셀 여러 개 합치기 · 같은 양식 보고서 만들기 · 재고·주문 확인 후 알림 · 상세페이지 문구 정리 · 회의록 정리</p>
+  <label class="check"><input type="checkbox" data-step="s1"><span>내 업무 중 <b>매주 반복하는 수작업</b> 3개를 떠올렸다</span></label>
+</section>
+
+<section class="pane" data-cat="start" data-tab="개발 6단계" data-now="회사가 실제로 쓰는 개발 순서 6단계를 익힙니다.">
+  <h2>회사 표준 개발 6단계</h2>
+  <p class="lead">실적센터·현황판을 만들며 굳은 순서입니다. 클로드에게도 이 순서로 시킵니다. 키트를 설치하면 클로드가 이 순서를 이미 알고 있습니다(스킬 '자동화개발').</p>
+  <div class="flow">
+    <div><i>1</i><b>요구</b><small>손으로 하는 순서와 끝 모습</small></div>
+    <div><i>2</i><b>수집</b><small>API → 엑셀 받기 → 자동 조작</small></div>
+    <div><i>3</i><b>계산·화면</b><small>계산은 한 곳에서</small></div>
+    <div><i>4</i><b>게시</b><small>같은 주소에 다시</small></div>
+    <div><i>5</i><b>자동 실행</b><small>작업 스케줄러</small></div>
+    <div><i>6</i><b>점검</b><small>원본 합계 대조·알림</small></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>단계</th><th>클로드에게 이렇게 말합니다</th><th>사람이 확인할 것</th></tr>
+    <tr><td>요구</td><td>"나는 매일 ○○에 로그인해서 ○○를 받아 ○○로 합쳐 ○○에게 보낸다. 이걸 자동으로."</td><td>클로드가 정리한 3줄이 맞는지</td></tr>
+    <tr><td>수집</td><td>"공식 API가 있는지 먼저 찾고, 없으면 엑셀 내려받기를 자동으로 해 줘."</td><td>받은 파일이 사람이 받은 것과 같은지</td></tr>
+    <tr><td>계산·화면</td><td>"합계 화면 만들어 줘. 화면기준 스킬대로."</td><td>숫자가 원본 합계와 같은지</td></tr>
+    <tr><td>게시</td><td>"이 화면을 Vercel에 올려서 주소 알려 줘. 다음부터 같은 주소에."</td><td>휴대폰에서도 열리는지</td></tr>
+    <tr><td>자동 실행</td><td>"매일 7시에 돌게 등록하고, 등록 결과까지 확인해 줘."</td><td>다음 날 아침 결과가 실제로 왔는지</td></tr>
+    <tr><td>점검</td><td>"실패하면 나한테 메일 오게 해 줘."</td><td>일부러 실패시켜 알림이 오는지</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="s2"><span>6단계를 읽었다</span></label>
+</section>
+
+<section class="pane" data-cat="start" data-tab="교육 영상" data-now="교육 영상을 먼저 한 번 보고 시작하면 훨씬 쉽습니다.">
+  <h2>교육 영상 (약 6분, 7장)</h2>
+  <p class="lead">이 매뉴얼과 같은 순서입니다. 영상을 보며 매뉴얼을 따라 하세요.</p>
+  <div class="tw"><table id="chapterTable">
+    <tr><th>장</th><th>내용</th><th>매뉴얼 위치</th></tr>
+    <tr><td class="n">1</td><td>결과 먼저: 회사가 바꾼 것</td><td>시작하기</td></tr>
+    <tr><td class="n">2</td><td>클로드 = 신입 개발자, 개발 6단계</td><td>시작하기 → 개발 6단계</td></tr>
+    <tr><td class="n">3</td><td>명령 한 줄로 전부 설치</td><td>설치</td></tr>
+    <tr><td class="n">4</td><td>첫 자동화 실습</td><td>첫 자동화</td></tr>
+    <tr><td class="n">5</td><td>회사 사례로 배우는 요령</td><td>회사 사례</td></tr>
+    <tr><td class="n">6</td><td>영상·디자인 도구</td><td>영상·디자인</td></tr>
+    <tr><td class="n">7</td><td>꼭 지킬 것, 막혔을 때</td><td>안전 규칙 · 막혔을 때</td></tr>
+  </table></div>
+  <p id="videoWhere">영상 파일: 회사 공유 폴더 <code>OneDrive\클로드-공유\교육\클로드_자동화_교육.mp4</code></p>
+  <label class="check"><input type="checkbox" data-step="s3"><span>교육 영상을 봤다</span></label>
+</section>
+
+<!-- ───────── 2. 설치 ───────── -->
+<section class="pane" data-cat="install" data-tab="한 줄로 전부 설치" data-now="명령 한 줄을 붙여 넣으면 필요한 프로그램 12가지가 전부 설치됩니다.">
+  <h2>명령 한 줄로 전부 설치</h2>
+  <p class="lead">이미 있는 프로그램은 건너뜁니다. 여러 번 실행해도 안전합니다. 10~25분 걸립니다.</p>
+  <ol class="steps">
+    <li>키보드 <b>윈도우 키</b> → <code>PowerShell</code> 입력 → <b>Windows PowerShell</b> 클릭(관리자로 열 필요 없음)</li>
+    <li>아래 [복사]를 누르고, 파란 창에 <b>마우스 오른쪽 클릭</b>(붙여넣기) → <b>Enter</b></li>
+  </ol>
+  <pre class="cmd" id="oneLine">irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1 | iex</pre>
+  <ol class="steps" start="3">
+    <li>중간에 <b>'이 앱이 디바이스를 변경하도록 허용하시겠어요?'</b> 창이 뜨면 <b>[예]</b></li>
+    <li>마지막에 <b>'설치 끝! 빠진 것 없음'</b>이 보이면 성공. 빠진 것이 있으면 컴퓨터를 다시 켠 뒤 같은 명령을 한 번 더</li>
+  </ol>
+  <h3>명령이 어렵다면: 더블클릭 방식</h3>
+  <p>회사 깃허브 저장소(<a id="repoLink" href="https://github.com/__OWNER__/drc-ai-starter" target="_blank" rel="noopener">drc-ai-starter</a>) → 초록 <b>[Code]</b> → <b>Download ZIP</b> → 압축 풀기 → <b>설치.bat</b> 더블클릭</p>
+  <h3>설치되는 것</h3>
+  <div class="tw"><table>
+    <tr><th>프로그램</th><th>하는 일</th></tr>
+    <tr><td>Claude Code · Claude 데스크톱 앱</td><td>말로 시키면 코드를 짜고 실행하는 클로드</td></tr>
+    <tr><td>Git · GitHub CLI</td><td>저장점(되돌리기), 회사 깃허브 연결</td></tr>
+    <tr><td>Node.js · Vercel CLI</td><td>만든 화면을 인터넷 주소로 게시, 리모션·HyperFrames 영상</td></tr>
+    <tr><td>Python + 도구 묶음</td><td>자료 수집·계산·엑셀·사이트 자동 조작(pandas, openpyxl, fastapi, playwright 등)</td></tr>
+    <tr><td>VS Code · FFmpeg · 옵시디언 · 크롬</td><td>파일 보기 · 영상 변환 · 작업 기록 · 사이트 자동 조작</td></tr>
+    <tr><td>Pretendard 글꼴</td><td>회사 화면·문서·영상 기본 글꼴</td></tr>
+    <tr><td>회사 규칙·스킬</td><td>내 작업 폴더 <code>클로드작업</code>, 규칙 파일, 스킬 '자동화개발'·'화면기준'</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="i1"><span>설치 명령을 실행했고 '설치 끝'을 봤다</span></label>
+</section>
+
+<section class="pane" data-cat="install" data-tab="하나씩 설치" data-now="한 줄 설치가 막혔을 때만 여기서 하나씩 설치합니다.">
+  <h2>하나씩 설치 (공식 내려받기 링크)</h2>
+  <p class="lead">링크를 누르면 공식 사이트가 새 탭으로 열립니다. 위에서부터 순서대로 설치하세요. 오른쪽 칸 명령은 PowerShell에 붙여 넣어도 됩니다.</p>
+  <div class="tw"><table>
+    <tr><th>순서</th><th>프로그램</th><th>내려받기</th><th>PowerShell 명령</th></tr>
+    <tr><td class="n">1</td><td>Git</td><td><a href="https://git-scm.com/download/win" target="_blank" rel="noopener">git-scm.com</a></td><td><code>winget install --id Git.Git -e</code></td></tr>
+    <tr><td class="n">2</td><td>Node.js (LTS)</td><td><a href="https://nodejs.org/ko" target="_blank" rel="noopener">nodejs.org</a></td><td><code>winget install --id OpenJS.NodeJS.LTS -e</code></td></tr>
+    <tr><td class="n">3</td><td>Python 3.14</td><td><a href="https://www.python.org/downloads/windows/" target="_blank" rel="noopener">python.org</a> (설치 첫 화면 'Add python.exe to PATH' 꼭 체크)</td><td><code>winget install --id Python.Python.3.14 -e</code></td></tr>
+    <tr><td class="n">4</td><td>Claude Code</td><td><a href="https://docs.claude.com/ko/docs/claude-code/setup" target="_blank" rel="noopener">설치 안내</a></td><td><code>irm https://claude.ai/install.ps1 | iex</code></td></tr>
+    <tr><td class="n">5</td><td>Claude 데스크톱 앱</td><td><a href="https://claude.ai/download" target="_blank" rel="noopener">claude.ai/download</a></td><td><code>winget install --id Anthropic.Claude -e</code></td></tr>
+    <tr><td class="n">6</td><td>GitHub CLI</td><td><a href="https://cli.github.com/" target="_blank" rel="noopener">cli.github.com</a></td><td><code>winget install --id GitHub.cli -e</code></td></tr>
+    <tr><td class="n">7</td><td>VS Code</td><td><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a></td><td><code>winget install --id Microsoft.VisualStudioCode -e</code></td></tr>
+    <tr><td class="n">8</td><td>FFmpeg</td><td><a href="https://www.gyan.dev/ffmpeg/builds/" target="_blank" rel="noopener">gyan.dev</a></td><td><code>winget install --id Gyan.FFmpeg -e</code></td></tr>
+    <tr><td class="n">9</td><td>옵시디언</td><td><a href="https://obsidian.md/download" target="_blank" rel="noopener">obsidian.md</a></td><td><code>winget install --id Obsidian.Obsidian -e</code></td></tr>
+    <tr><td class="n">10</td><td>크롬</td><td><a href="https://www.google.com/chrome/" target="_blank" rel="noopener">google.com/chrome</a></td><td><code>winget install --id Google.Chrome -e</code></td></tr>
+    <tr><td class="n">11</td><td>Pretendard 글꼴</td><td><a href="https://github.com/orioncactus/pretendard/releases" target="_blank" rel="noopener">github.com/orioncactus</a> (zip 풀고 public\static 의 otf 전부 → 오른쪽 클릭 → 설치)</td><td>—</td></tr>
+    <tr><td class="n">12</td><td>Vercel CLI</td><td><a href="https://vercel.com/docs/cli" target="_blank" rel="noopener">vercel.com/docs/cli</a></td><td><code>npm install -g vercel@65.0.0</code></td></tr>
+    <tr><td class="n">13</td><td>파이썬 도구 묶음</td><td>—</td><td><code>python -m pip install pandas openpyxl xlsxwriter requests python-dotenv fastapi uvicorn pyinstaller pywin32 playwright==1.60.0</code></td></tr>
+  </table></div>
+  <div class="note">Vercel CLI는 <b>65.0.0으로 고정</b>합니다. 최신판이 설치 오류를 낸 이력이 있습니다. 하나씩 설치를 마치면 창을 닫고 새 PowerShell을 열어야 명령이 인식됩니다.</div>
+  <label class="check"><input type="checkbox" data-step="i2"><span>(필요한 경우) 빠진 프로그램을 하나씩 설치했다</span></label>
+</section>
+
+<section class="pane" data-cat="install" data-tab="로그인·연결" data-now="설치한 프로그램에 회사 계정으로 로그인합니다. 처음 한 번만 합니다.">
+  <h2>로그인·연결 (처음 한 번)</h2>
+  <div class="tw"><table>
+    <tr><th>무엇</th><th>어떻게</th><th>확인</th></tr>
+    <tr><td>Claude Code</td><td>새 PowerShell → <code>cd ~\클로드작업</code> → <code>claude</code> → 브라우저가 열리면 <b>회사가 배정한 계정</b>으로 로그인 (Pro 이상 요금제 필요)</td><td>클로드 입력창에 <code>/status</code></td></tr>
+    <tr><td>Claude 데스크톱 앱</td><td>앱 실행 → 같은 계정 로그인 → 위쪽 <b>[코드]</b> 탭 → 작업 폴더로 <code>클로드작업</code> 지정 → 폴더 접근 '허용'</td><td>코드 탭에서 "안녕" 입력</td></tr>
+    <tr><td>깃허브</td><td><code>gh auth login</code> → GitHub.com → HTTPS → Yes → Login with a web browser → 화면의 8자리 코드를 브라우저에 입력</td><td><code>gh auth status</code></td></tr>
+    <tr><td>Vercel (화면 게시)</td><td><code>vercel login</code> → 회사 Vercel 팀 초대 메일 수락 후 로그인</td><td><code>vercel whoami</code></td></tr>
+    <tr><td>Claude in Chrome</td><td><a href="https://chromewebstore.google.com/search/Claude" target="_blank" rel="noopener">크롬 웹 스토어</a>에서 Anthropic의 'Claude' 확장 설치 → 회사 계정 로그인 → Claude Code에서 <code>/chrome</code></td><td>"크롬에서 네이버 열어 줘"</td></tr>
+  </table></div>
+  <pre class="cmd">cd ~\클로드작업
+claude</pre>
+  <div class="note">계정 비밀번호는 각자 관리합니다. 남의 계정으로 로그인하거나 비밀번호를 채팅에 쓰지 않습니다.</div>
+  <label class="check"><input type="checkbox" data-step="i3"><span>Claude Code에 로그인했다</span></label>
+  <label class="check"><input type="checkbox" data-step="i4"><span>깃허브·Vercel·크롬 확장을 연결했다</span></label>
+</section>
+
+<section class="pane" data-cat="install" data-tab="설치 점검" data-now="빠진 것이 없는지 점검 명령으로 확인합니다.">
+  <h2>설치 점검</h2>
+  <p class="lead">아래 명령은 설치하지 않고 확인만 합니다. <b>[없음]</b>이 있으면 '하나씩 설치' 탭에서 그 줄만 설치하세요.</p>
+  <pre class="cmd" id="checkLine">&amp; ([scriptblock]::Create((irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1))) -OnlyCheck</pre>
+  <p>또는 내려받은 폴더의 <b>점검.bat</b> 더블클릭.</p>
+  <h3>점검 화면 예시</h3>
+  <pre class="cmd">──── 설치 점검 결과 ────
+  [설치됨]  Git
+  [설치됨]  Node.js
+  [설치됨]  Python 3.14
+  [없음]    GitHub CLI  → winget install --id GitHub.cli
+  …
+빠진 것: 1 개</pre>
+  <label class="check"><input type="checkbox" data-step="i5"><span>점검 결과 '빠진 것: 0 개'</span></label>
+</section>
+
+<!-- ───────── 3. 첫 자동화 ───────── -->
+<section class="pane" data-cat="first" data-tab="고를 일 찾기" data-now="처음 자동화할 일을 하나 고릅니다. 작고 매일 하는 일이 좋습니다.">
+  <h2>처음 자동화할 일 고르기</h2>
+  <div class="tw"><table>
+    <tr><th>좋은 첫 과제</th><th>나중에 할 과제</th></tr>
+    <tr><td>내 PC 안의 엑셀 여러 개를 합쳐 합계 표 만들기</td><td>로그인·2단계 인증이 있는 사이트 자동 수집</td></tr>
+    <tr><td>같은 양식 보고서(주간 실적, 재고표) 자동 작성</td><td>여러 사람이 입력·승인하는 화면</td></tr>
+    <tr><td>폴더에 파일이 들어오면 정리·이름 바꾸기</td><td>고객 개인정보가 들어간 자료</td></tr>
+  </table></div>
+  <h3>고르는 기준 3가지</h3>
+  <ol class="steps"><li>일주일에 2번 이상 한다</li><li>매번 순서가 같다</li><li>틀려도 바로 확인할 수 있다(원본과 비교 가능)</li></ol>
+  <label class="check"><input type="checkbox" data-step="f1"><span>첫 과제를 하나 골랐다</span></label>
+</section>
+
+<section class="pane" data-cat="first" data-tab="첫 지시" data-now="엑셀 파일을 '내_자동화' 폴더에 넣고 아래 지시를 붙여 넣습니다.">
+  <h2>첫 지시 — 그대로 붙여 넣어도 됩니다</h2>
+  <ol class="steps">
+    <li>합칠 엑셀 파일을 <code>클로드작업\내_자동화</code> 폴더에 복사(고객 개인정보가 없는 파일로)</li>
+    <li>PowerShell → <code>cd ~\클로드작업</code> → <code>claude</code></li>
+    <li>아래 지시를 붙여 넣기</li>
+  </ol>
+  <pre class="cmd">내_자동화 폴더에 있는 엑셀 파일들을 합쳐서, 채널별·날짜별 합계를 보여 주는 화면을 만들어 줘.
+화면은 회사 화면기준 스킬을 따르고, 필요한 프로그램은 알아서 설치해 줘.
+시작 전에 무엇을 어떻게 만들지 3줄로 먼저 보여 주고,
+끝나면 원본 합계와 화면 합계가 같은지 대조해서 알려 줘.</pre>
+  <div class="note">클로드가 "이 명령을 실행해도 될까요?"라고 물으면 내용을 읽고 허용합니다. 파일 삭제·발송처럼 되돌릴 수 없는 일이면 멈추고 담당자에게 물어보세요.</div>
+  <label class="check"><input type="checkbox" data-step="f2"><span>첫 지시를 보내고 결과 화면을 받았다</span></label>
+</section>
+
+<section class="pane" data-cat="first" data-tab="고치기·규칙 저장" data-now="결과를 보고 구체적으로 고쳐 달라고 한 뒤, 배운 것을 규칙에 저장합니다.">
+  <h2>고치기 → 규칙에 저장</h2>
+  <div class="tw"><table>
+    <tr><th>나쁜 피드백</th><th>좋은 피드백</th></tr>
+    <tr><td>"이상해. 다시 해 줘."</td><td>"3번째 칸 합계가 원본보다 12,000원 많아. 반품 줄을 빼 줘."</td></tr>
+    <tr><td>"글씨가 별로야."</td><td>"표 글씨를 15px로 키우고 숫자는 오른쪽 정렬해 줘."</td></tr>
+    <tr><td>"빨리 좀."</td><td>"매일 쓰니까 실행 파일(.exe)로 만들어서 바탕화면에 바로 가기 놔 줘."</td></tr>
+  </table></div>
+  <h3>마지막에 꼭 이 한마디</h3>
+  <pre class="cmd">오늘 고친 거 CLAUDE.md '배운 것'에 저장해 줘.</pre>
+  <p>그러면 다음부터 같은 실수를 하지 않습니다. 클로드가 점점 내 업무를 아는 직원이 됩니다.</p>
+  <h3>되돌리기</h3>
+  <pre class="cmd">지금 상태를 git으로 저장점 남겨 줘.
+(망쳤을 때) 마지막 저장점으로 되돌려 줘.</pre>
+  <label class="check"><input type="checkbox" data-step="f3"><span>고쳐 달라고 했고, 배운 것을 저장했다</span></label>
+</section>
+
+<section class="pane" data-cat="first" data-tab="매일 자동 실행" data-now="매일 정해진 시간에 저절로 돌게 등록하고, 실제로 돌았는지 확인합니다.">
+  <h2>매일 자동 실행 (작업 스케줄러)</h2>
+  <pre class="cmd">이거 매일 아침 7시에 자동으로 돌게 작업 스케줄러에 등록해 줘.
+검은 창이 뜨지 않게 하고, 노트북 배터리일 때도 돌게 해 줘.
+등록 후 마지막 실행 결과가 0인지, 결과 파일이 오늘 날짜로 생겼는지 확인해서 알려 줘.</pre>
+  <div class="note"><b>조용히 실패하는 함정</b>: 회사 쿠팡 수집 작업은 경로의 띄어쓰기 때문에 등록 후 한 번도 돌지 않았는데 아무도 몰랐습니다. "등록했습니다"로 끝내지 말고 <b>다음 날 아침 결과가 실제로 왔는지</b> 꼭 봅니다.</div>
+  <div class="tw"><table>
+    <tr><th>확인 방법</th><th>정상</th></tr>
+    <tr><td>클로드에게 "어젯밤 작업 결과 확인해 줘"</td><td>마지막 실행 결과 0, 결과 파일 시각이 오늘</td></tr>
+    <tr><td>윈도우 키 → '작업 스케줄러' → 내 작업</td><td>'마지막 실행 결과' 칸에 '작업을 완료했습니다'</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="f4"><span>자동 실행을 등록했고 다음 날 결과를 확인했다</span></label>
+</section>
+
+<!-- ───────── 4. 회사 사례 ───────── -->
+<section class="pane" data-cat="cases" data-tab="통합 실적센터" data-now="가장 큰 사례입니다. 8곳 자료를 어떻게 매일 자동으로 모으는지 봅니다.">
+  <h2>통합 실적센터</h2>
+  <p class="lead">주소: <code>drc-siljeok.vercel.app</code> (회사 아이디로 로그인, 아이디마다 볼 수 있는 메뉴가 다름)</p>
+  <div class="flow">
+    <div><b>8개 원천</b><small>사방넷·이카운트·THK·쿠팡·스마트스토어·네이버 광고 등</small></div>
+    <div><b>수집</b><small>API 또는 브라우저 자동 조작(Playwright)</small></div>
+    <div><b>누적·계산</b><small>계산 코드 하나</small></div>
+    <div><b>엑셀·메일</b><small>06:00 · 09:30</small></div>
+    <div><b>웹 게시</b><small>Vercel 같은 주소</small></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>배울 요령</th><th>왜</th></tr>
+    <tr><td>공식 API를 먼저 쓴다(네이버 검색광고·이카운트)</td><td>사이트 화면이 바뀌어도 안 깨짐</td></tr>
+    <tr><td>하루 2번 수집(06:00·09:30)</td><td>네이버 주문·광고가 늦게 반영됨</td></tr>
+    <tr><td>화면 숫자 = 메일 숫자 = 엑셀 숫자</td><td>계산 코드를 하나만 둬서 서로 어긋나지 않음</td></tr>
+    <tr><td>아이디별 권한(손익은 대표만)</td><td>화면이 아니라 서버에서 막아야 안전</td></tr>
+    <tr><td>자료가 비면 '[자료 누락]' 메일·텔레그램</td><td>조용한 실패를 그날 안에 발견</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="c1"><span>실적센터 구조를 이해했다</span></label>
+</section>
+
+<section class="pane" data-cat="cases" data-tab="복지용구 현황판" data-now="원본 파일을 넣기만 하면 자동으로 읽히는 구조를 봅니다.">
+  <h2>복지용구 현황판 (실적센터 '복지용구' 메뉴)</h2>
+  <div class="tw"><table>
+    <tr><th>문제</th><th>해결</th></tr>
+    <tr><td>공단 원본은 달마다 칸 순서가 다르고 머리글에 오타가 있음</td><td>칸 이름이 아니라 묶음 합계로 판정, 원본의 「계」 줄과 대조해 68개월 전부 통과 후 반영</td></tr>
+    <tr><td>정부 공지를 사이트 5곳에서 따로 확인</td><td>매일 05:40 자동 수집해 공지 4탭으로 모음</td></tr>
+    <tr><td>제품 766개 목록 수작업 정리</td><td>7일마다 자동 갱신</td></tr>
+  </table></div>
+  <p><b>배울 점</b>: 사람이 할 일은 '원본 파일을 폴더에 넣고 <code>갱신.bat</code> 더블클릭'뿐. 클로드에게 "원본 합계와 맞지 않으면 반영하지 말고 알려 줘"를 꼭 넣습니다.</p>
+  <label class="check"><input type="checkbox" data-step="c2"><span>'원본 대조 후 반영' 원칙을 이해했다</span></label>
+</section>
+
+<section class="pane" data-cat="cases" data-tab="사업소 운영판" data-now="클로드 계정 없는 직원도 로그인해 쓰는 사이트를 만든 방법입니다.">
+  <h2>복지용구사업소 운영판</h2>
+  <p class="lead">주소: <code>drc-bokji.vercel.app</code> · 아이디·비밀번호 로그인, 대표가 화면에서 직접 권한 부여(관리자·담당자·열람자)</p>
+  <div class="tw"><table>
+    <tr><th>구성</th><th>만든 방법</th></tr>
+    <tr><td>내용</td><td>JSON 파일 하나에 단계·점검표·준수 사항을 적음 → 클로드가 화면으로 만듦</td></tr>
+    <tr><td>로그인</td><td>쿠키 + 미들웨어. 비밀 서명값은 <code>.env</code>에만</td></tr>
+    <tr><td>체크 상태·계정 저장</td><td>Vercel Blob(비공개 저장소)</td></tr>
+    <tr><td>게시</td><td>정해진 PC 한 곳에서만(다른 PC는 서명값이 달라 전원이 다시 로그인하게 됨)</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="c3"><span>로그인 사이트 구조를 이해했다</span></label>
+</section>
+
+<section class="pane" data-cat="cases" data-tab="생산 3종판" data-now="엑셀 공유를 '화면 입력·보고·승인'으로 바꾼 사례입니다.">
+  <h2>생산 계획 · 생산 자금 · 생산 현황판</h2>
+  <div class="tw"><table>
+    <tr><th>화면</th><th>예전</th><th>지금</th></tr>
+    <tr><td>생산 계획 <code>#/plan</code></td><td>엑셀·구두 보고</td><td>판매·재고 기준 자동 계산 → 담당자 조정·보고 → 대표 승인</td></tr>
+    <tr><td>생산 자금 <code>#/fund</code></td><td>'투입 필요자금' 엑셀 손수 수정</td><td>월별 준비·지급·선입금 정산을 화면에서, 기록에 이름 남김</td></tr>
+    <tr><td>생산 현황 <code>#/prod</code></td><td>요청·발주·입고·출고를 구두로 반복 확인</td><td>요청→발주·입고→생산→출고, 부족하면 빨간불 + 아침 메일</td></tr>
+  </table></div>
+  <div class="note"><b>교훈</b>: 처음엔 따로 화면을 만들었다가 "기존 대시보드에 붙여서 한 화면으로" 지시로 실적센터 메뉴로 합쳤습니다. 새 화면을 만들기 전에 <b>이미 있는 화면에 메뉴로 붙일 수 있는지</b> 먼저 봅니다.</div>
+  <label class="check"><input type="checkbox" data-step="c4"><span>'있는 화면에 붙이기' 원칙을 이해했다</span></label>
+</section>
+
+<!-- ───────── 5. 화면·게시·깃허브 ───────── -->
+<section class="pane" data-cat="ship" data-tab="화면 기준" data-now="회사 화면 기준을 익힙니다. 어기면 낙제입니다.">
+  <h2>회사 화면 기준</h2>
+  <p class="lead">"만든 자가 불편하면 사용하는 고객이 편안해진다." — 대표. 키트의 스킬 '화면기준'에 들어 있어 클로드가 자동으로 따릅니다.</p>
+  <div class="tw"><table>
+    <tr><th>지킬 것</th><th>금지</th></tr>
+    <tr><td>왼쪽 = 업무 묶음, 위 탭 = 진행 순서, 한 화면 안에서 처리</td><td>세로로 길게 내려 읽는 화면</td></tr>
+    <tr><td>본문 15px·표 14px·탭 16px 이상, 글꼴 Pretendard</td><td>13px 이하 본문</td></tr>
+    <tr><td>수치는 그래프, 설명은 표</td><td>문장 줄줄이 나열</td></tr>
+    <tr><td>주 버튼은 화면마다 하나</td><td>둥근 카드+그림자 남발, 알약 단추, 이모지, 보라→파랑 그라디언트, 방사형 빛줄기 무늬</td></tr>
+  </table></div>
+  <p>이 매뉴얼 화면 자체가 그 기준의 예시입니다.</p>
+  <label class="check"><input type="checkbox" data-step="h1"><span>화면 기준을 읽었다</span></label>
+</section>
+
+<section class="pane" data-cat="ship" data-tab="깃 저장점" data-now="망쳐도 되돌릴 수 있게 저장점을 남기는 법입니다.">
+  <h2>깃(Git) = 게임의 저장점</h2>
+  <p class="lead">명령을 외울 필요 없습니다. 클로드에게 말로 시킵니다.</p>
+  <div class="tw"><table>
+    <tr><th>하고 싶은 것</th><th>클로드에게</th><th>실제 명령(참고)</th></tr>
+    <tr><td>처음 시작</td><td>"이 폴더 git으로 관리 시작해 줘. .gitignore 확인하고."</td><td><code>git init</code></td></tr>
+    <tr><td>저장점</td><td>"지금 상태 저장점 남겨 줘."</td><td><code>git add . && git commit -m "설명"</code></td></tr>
+    <tr><td>바뀐 것 보기</td><td>"마지막 저장점 이후 뭐가 바뀌었어?"</td><td><code>git diff</code></td></tr>
+    <tr><td>되돌리기</td><td>"마지막 저장점으로 되돌려 줘."</td><td><code>git restore .</code></td></tr>
+  </table></div>
+  <div class="note"><code>.env</code>(비밀번호)·고객 파일·실적 원본은 <code>.gitignore</code>로 저장점에서 빼야 합니다. 키트의 <code>.gitignore</code>가 이미 빼 줍니다.</div>
+  <label class="check"><input type="checkbox" data-step="h2"><span>저장점을 한 번 남겨 봤다</span></label>
+</section>
+
+<section class="pane" data-cat="ship" data-tab="깃허브" data-now="만든 것을 회사 깃허브에 올려 다른 PC·동료와 나눕니다.">
+  <h2>깃허브 = 인터넷 저장소</h2>
+  <div class="tw"><table>
+    <tr><th>하고 싶은 것</th><th>클로드에게</th></tr>
+    <tr><td>회사 깃허브에 새 저장소</td><td>"이 폴더를 회사 깃허브에 비공개 저장소로 올려 줘. 비밀값이 안 올라가는지 먼저 확인하고."</td></tr>
+    <tr><td>다른 PC에서 이어서</td><td>"회사 깃허브의 ○○ 저장소를 받아 줘."</td></tr>
+    <tr><td>최신으로 맞추기</td><td>"깃허브 최신 내용 받아 줘." / "지금 것 올려 줘."</td></tr>
+  </table></div>
+  <div class="note">업무 저장소는 <b>비공개(private)</b>가 기본입니다. 공개 저장소는 이 키트처럼 비밀값이 전혀 없는 것만.</div>
+  <label class="check"><input type="checkbox" data-step="h3"><span>깃허브 로그인(gh auth status)이 된다</span></label>
+</section>
+
+<section class="pane" data-cat="ship" data-tab="Vercel 게시" data-now="만든 화면을 인터넷 주소로 올려 휴대폰에서도 보게 합니다.">
+  <h2>Vercel = 화면을 인터넷 주소로</h2>
+  <pre class="cmd">이 화면을 Vercel에 올려서 주소 알려 줘.
+로그인이 필요하면 아이디·비밀번호 로그인을 붙이고, 비밀값은 .env에 넣어 줘.
+다음부터는 같은 주소에 다시 올려 줘.</pre>
+  <div class="tw"><table>
+    <tr><th>규칙</th><th>이유</th></tr>
+    <tr><td>같은 주소에 다시 올림</td><td>주소가 바뀌면 동료가 옛 화면을 봄</td></tr>
+    <tr><td>Vercel CLI 65.0.0 고정</td><td>최신판 설치 오류 이력</td></tr>
+    <tr><td>게시 기록 끝에 완료 문구 확인</td><td>없으면 실패한 것</td></tr>
+    <tr><td>입력·저장은 Vercel Blob(비공개)</td><td>동료가 입력한 내용이 모두에게 같이 보임</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="h4"><span>화면을 게시해 휴대폰으로 열어 봤다</span></label>
+</section>
+
+<!-- ───────── 6. 영상·디자인 ───────── -->
+<section class="pane" data-cat="media" data-tab="리모션" data-now="코드로 영상을 만드는 리모션을 소개합니다. 홍보·교육 영상에 씁니다.">
+  <h2>리모션(Remotion) — 코드로 만드는 영상</h2>
+  <p class="lead">화면 글자·그래프·숫자가 움직이는 영상을 클로드가 코드로 만듭니다. 실적 요약 영상, 제품 설명 영상에 좋습니다. Node.js가 있으면 따로 설치할 것이 없습니다.</p>
+  <pre class="cmd">리모션으로 30초짜리 이번 달 판매 요약 영상 만들어 줘.
+1920×1080, 글꼴 Pretendard, 숫자는 올라가는 동작, 마지막에 회사 로고.
+렌더해서 mp4 경로 알려 줘.</pre>
+  <div class="tw"><table>
+    <tr><th>참고</th><th>내용</th></tr>
+    <tr><td>새 프로젝트(직접 할 때)</td><td><code>npx create-video@latest</code></td></tr>
+    <tr><td>공식 안내</td><td><a href="https://www.remotion.dev/docs" target="_blank" rel="noopener">remotion.dev/docs</a></td></tr>
+    <tr><td>회사 사용 시 확인</td><td>리모션은 직원 4명 이상 회사의 상업 사용에 유료 사용권이 필요합니다. 쓰기 전 담당자에게 확인하세요(<a href="https://www.remotion.dev/license" target="_blank" rel="noopener">사용권 안내</a>).</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="m1"><span>리모션이 무엇인지 안다</span></label>
+</section>
+
+<section class="pane" data-cat="media" data-tab="HyperFrames" data-now="HTML로 영상을 만드는 HyperFrames입니다. 이 교육 영상도 이걸로 만들었습니다.">
+  <h2>HyperFrames — HTML로 만드는 영상</h2>
+  <p class="lead">웹 화면처럼 만든 장면을 한 장씩 찍어 영상으로 만듭니다. 이 교육 영상도 HyperFrames로 만들었습니다.</p>
+  <pre class="cmd">HyperFrames로 1분짜리 신입 교육 영상 만들어 줘.
+장면 5개, 한국어 큰 자막, 글꼴 Pretendard, 차분한 배경음악.
+미리보기 먼저 보여 주고, 내가 좋다고 하면 렌더해 줘.</pre>
+  <div class="tw"><table>
+    <tr><th>참고</th><th>내용</th></tr>
+    <tr><td>새 프로젝트(직접 할 때)</td><td><code>npx hyperframes init 내영상</code></td></tr>
+    <tr><td>클로드 스킬</td><td>Claude Code에서 <code>/plugin</code> → 'hyperframes' 검색 → 설치하면 클로드가 규칙을 알고 만듭니다</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="m2"><span>HyperFrames가 무엇인지 안다</span></label>
+</section>
+
+<section class="pane" data-cat="media" data-tab="모션그래픽 글자" data-now="영상 속 글자를 움직이게 하는 회사 기준입니다.">
+  <h2>모션그래픽 글자 — 회사 기준</h2>
+  <div class="tw"><table>
+    <tr><th>지킬 것</th><th>금지</th></tr>
+    <tr><td>핵심 단어는 크게(2배), 확대·튀어오름·한 글자씩 등장</td><td>흐릿한 글자, 작은 글자 여러 줄</td></tr>
+    <tr><td>자막은 의미 단위로 끊어 한 줄씩</td><td>긴 문장 한꺼번에</td></tr>
+    <tr><td>실사 또는 고급 이미지 + 움직이는 글자</td><td>카드·알약 모양 싸구려 그래픽</td></tr>
+    <tr><td>AI 사용 안내는 영상 설명란에만</td><td>화면에 'AI 생성' 표시</td></tr>
+    <tr><td>목소리는 유료 목소리 또는 사람 목소리</td><td>무료 기계 목소리</td></tr>
+  </table></div>
+  <div class="note"><b>절대 금지</b>: 한 점에서 퍼지는 빛줄기·햇살·방사형 줄무늬·흰 바탕 붉은 원(욱일기 형태). 이미지 생성 지시문에도 'NO radiating light rays, NO sunburst'를 넣습니다.</div>
+  <label class="check"><input type="checkbox" data-step="m3"><span>모션그래픽 기준을 읽었다</span></label>
+</section>
+
+<section class="pane" data-cat="media" data-tab="타이포그래피" data-now="글꼴과 글자 크기 기준입니다. 화면·문서·영상 모두 같습니다.">
+  <h2>타이포그래피(글자 디자인) 기준</h2>
+  <div class="tw"><table>
+    <tr><th>어디</th><th>글꼴</th><th>크기</th></tr>
+    <tr><td>업무 화면</td><td>Pretendard</td><td>본문 15 · 표 14 · 탭 16 · 제목 18~24px</td></tr>
+    <tr><td>보고 화면</td><td>Pretendard</td><td>본문 15 · 보조 14 · 작은 표시 13 · 제목 20px</td></tr>
+    <tr><td>PPT</td><td>Pretendard만</td><td>16:9, 이모지 금지</td></tr>
+    <tr><td>영상 자막</td><td>Pretendard 굵게</td><td>화면 높이의 5~7%, 아래쪽 안전 영역 안</td></tr>
+  </table></div>
+  <ul><li>숫자는 자리가 맞게 고정폭 숫자로</li><li>회색 보조 글씨도 배경과 충분히 대비</li><li>한 화면에 글꼴은 1~2개만</li></ul>
+  <p>글꼴 내려받기: <a href="https://github.com/orioncactus/pretendard" target="_blank" rel="noopener">Pretendard 공식</a> (키트가 자동 설치)</p>
+  <label class="check"><input type="checkbox" data-step="m4"><span>글꼴 기준을 읽었다</span></label>
+</section>
+
+<!-- ───────── 7. 안전 규칙 ───────── -->
+<section class="pane" data-cat="safe" data-tab="비밀번호·키" data-now="비밀번호와 키를 다루는 규칙입니다. 가장 중요합니다.">
+  <h2>비밀번호·API 키는 .env에만</h2>
+  <div class="tw"><table>
+    <tr><th>하지 말 것</th><th>대신</th></tr>
+    <tr><td>채팅에 "비밀번호는 abc123이야"</td><td>"<code>.env</code> 파일에 SITE_PASSWORD 칸 만들어 줘. 값은 내가 직접 넣을게."</td></tr>
+    <tr><td>코드에 비밀번호 직접 쓰기</td><td>코드는 <code>.env</code>에서 읽게</td></tr>
+    <tr><td>깃허브에 <code>.env</code> 올리기</td><td><code>.gitignore</code>에 <code>.env</code> (키트에 포함)</td></tr>
+    <tr><td>화면 캡처에 아이디·비번 노출</td><td>캡처 전 가리기</td></tr>
+  </table></div>
+  <pre class="cmd">.env.example을 복사해서 .env 만들어 줘. 값은 비워 두고, 코드는 거기서 읽게 해 줘.</pre>
+  <label class="check"><input type="checkbox" data-step="x1"><span>비밀값 규칙을 지킨다</span></label>
+</section>
+
+<section class="pane" data-cat="safe" data-tab="개인정보" data-now="고객 개인정보가 든 파일을 다루는 규칙입니다.">
+  <h2>고객 개인정보</h2>
+  <ul>
+    <li>주문 파일(이름·전화·주소)은 내 PC 안에서만. 깃허브·외부 사이트·채팅방에 올리지 않습니다.</li>
+    <li>연습은 개인정보를 지운 파일이나 예시 자료로 합니다.</li>
+    <li>화면에 고객 정보를 보여야 하면 로그인과 권한을 꼭 붙입니다.</li>
+    <li>실적 금액·원가·손익은 권한 있는 사람만 보게 서버에서 막습니다.</li>
+  </ul>
+  <label class="check"><input type="checkbox" data-step="x2"><span>개인정보 규칙을 지킨다</span></label>
+</section>
+
+<section class="pane" data-cat="safe" data-tab="확인받을 일" data-now="클로드가 해도 되는 일과, 실행 전에 사람 확인이 필요한 일을 구분합니다.">
+  <h2>실행 전에 사람 확인이 필요한 일</h2>
+  <div class="tw"><table>
+    <tr><th>클로드가 바로 해도 됨</th><th>실행 전에 확인</th></tr>
+    <tr><td>파일 읽기, 표·화면 만들기, 계산, 프로그램 설치</td><td>파일 삭제·이동·이름 바꾸기</td></tr>
+    <tr><td>내 PC 안에서 시험 실행</td><td>메일·문자·카톡 발송, 고객에게 보이는 게시</td></tr>
+    <tr><td>저장점 남기기</td><td>결제, 광고비 변경, 쇼핑몰 가격·재고 변경</td></tr>
+    <tr><td>내려받기 없는 시험(<code>--skip-download</code>)</td><td>동시 접속 1명 사이트(사방넷·이카운트) 로그인 — 쓰던 직원이 튕김</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="x3"><span>확인받을 일을 구분할 수 있다</span></label>
+</section>
+
+<!-- ───────── 8. 막혔을 때 ───────── -->
+<section class="pane" data-cat="help" data-tab="자주 나는 문제" data-now="회사에서 실제로 겪은 문제와 해결법입니다. 막히면 여기부터 봅니다.">
+  <h2>자주 나는 문제 12가지 (회사 실제 사례)</h2>
+  <div class="tw"><table>
+    <tr><th>증상</th><th>원인</th><th>해결</th></tr>
+    <tr><td>명령을 쳤는데 '인식되지 않습니다'</td><td>설치 직후 창이 옛 정보를 가짐</td><td>PowerShell 창을 닫고 새로 열기, 그래도 안 되면 재부팅</td></tr>
+    <tr><td>예약 작업이 안 돔(결과 0x80070002)</td><td>경로의 띄어쓰기에서 잘림</td><td>"경로 따옴표로 다시 등록하고 결과 확인해 줘"</td></tr>
+    <tr><td>노트북에서 예약 작업이 안 돔</td><td>배터리일 때 실행 안 함 설정</td><td>"배터리일 때도 돌게 바꿔 줘"</td></tr>
+    <tr><td>예약 작업 때 검은 창이 뜸</td><td>cmd·python으로 직접 실행</td><td>"창 안 뜨게 숨김 실행으로 바꿔 줘"</td></tr>
+    <tr><td>메일이 안 나감(535 오류)</td><td>네이버 메일 'POP3/SMTP 사용함'이 꺼짐 또는 앱 비밀번호 폐기</td><td>네이버 메일 환경설정 확인 → 앱 비밀번호 새로 발급 → <code>.env</code> 갱신</td></tr>
+    <tr><td>수집했는데 매출 0원</td><td>사이트가 늦게 떠서 버튼을 못 누름</td><td>"고정 대기 말고 요소가 뜰 때까지 기다리고, 3번 재시도, 실패 화면 저장해 줘"</td></tr>
+    <tr><td>며칠째 수집이 멈췄는데 작업은 '정상'</td><td>사이트 안내창(비밀번호 변경 권유)이 화면을 가림</td><td>"안내창이 뜨면 닫는 단계 넣어 줘", 결과 파일 날짜로 감시</td></tr>
+    <tr><td>내가 수집하니 동료가 로그아웃됨</td><td>동시 접속 1명 제한 사이트</td><td>시험은 내려받기 없이, 수집 시간 조정</td></tr>
+    <tr><td>매출이 두 번 잡힘</td><td>같은 거래가 두 곳에서 들어옴</td><td>"원본 합계와 대조하고 겹치는 거래처 빼 줘"</td></tr>
+    <tr><td>Vercel 게시 실패</td><td>최신판 Vercel CLI 오류</td><td><code>npm install -g vercel@65.0.0</code></td></tr>
+    <tr><td>고친 화면이 옛날 그대로</td><td>브라우저가 옛 파일 기억</td><td>Ctrl+F5, "파일 주소에 버전 붙여 줘"</td></tr>
+    <tr><td>한글이 깨짐(꿿꿿)</td><td>PowerShell 글자 인코딩</td><td>"UTF-8로 맞춰 줘" (<code>PYTHONIOENCODING=utf-8</code>)</td></tr>
+  </table></div>
+  <label class="check"><input type="checkbox" data-step="q1"><span>문제 표를 한 번 훑어봤다</span></label>
+</section>
+
+<section class="pane" data-cat="help" data-tab="도움 요청법" data-now="혼자 안 풀리면 이렇게 묻습니다. 대부분 클로드가 스스로 고칩니다.">
+  <h2>도움 요청법</h2>
+  <h3>1단계 — 클로드에게 오류를 그대로</h3>
+  <pre class="cmd">이 오류가 났어. 원인 찾아서 고쳐 줘. 고치기 전에 저장점 남기고.
+(오류 문구 전체를 여기에 붙여 넣기)</pre>
+  <h3>2단계 — 그래도 안 되면 담당자에게</h3>
+  <div class="tw"><table>
+    <tr><th>같이 보낼 것</th><th>보내지 말 것</th></tr>
+    <tr><td>무엇을 하려 했는지 한 줄, 오류 문구, 화면 캡처, 설치 점검 결과</td><td>비밀번호, 고객 정보가 보이는 캡처</td></tr>
+  </table></div>
+  <h3>잘 쓰는 사람들의 습관</h3>
+  <ul><li>시작 전에 "3줄로 계획 먼저 보여 줘"</li><li>끝나면 "원본과 대조해서 맞는지 알려 줘"</li><li>하루를 마칠 때 "오늘 배운 것 저장해 줘"</li></ul>
+  <label class="check"><input type="checkbox" data-step="q2"><span>막히면 어떻게 할지 안다</span></label>
+</section>
+
+      </div>
+      <aside class="right" aria-label="내 진행">
+        <div class="rsec">
+          <h4>내 진행</h4>
+          <div class="bar"><span id="allBar"></span></div>
+          <div class="rt"><b id="allNum" style="color:var(--ink)">0</b> / <span id="allTotal">0</span> 단계 완료</div>
+        </div>
+        <div class="rsec"><div class="catbars" id="catBars"></div></div>
+        <div class="rsec">
+          <h4>설치 명령</h4>
+          <pre class="cmd" id="sideCmd" style="margin:0"></pre>
+          <p class="rt">PowerShell에 붙여 넣고 Enter. 자세한 순서는 '설치' 묶음.</p>
+        </div>
+        <div class="rsec">
+          <h4>막히면</h4>
+          <p class="rt" style="margin:0">오류 문구를 그대로 클로드에게 붙여 넣고 "원인 찾아서 고쳐 줘". 그래도 안 되면 '막혔을 때 → 도움 요청법'.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  var OWNER='__OWNER__';
+  var CATS=[['start','시작하기'],['install','설치'],['first','첫 자동화'],['cases','회사 사례'],['ship','화면·게시·깃허브'],['media','영상·디자인'],['safe','안전 규칙'],['help','막혔을 때']];
+  var panes=[].slice.call(document.querySelectorAll('.pane'));
+  var store={get:function(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+  var done=store.get('drc_manual_done')||{};
+  var pos=store.get('drc_manual_pos')||{cat:'start',i:0};
+  // 저장소 주인 반영
+  document.querySelectorAll('pre.cmd, a#repoLink').forEach(function(el){
+    if(el.tagName==='A'){el.href=el.href.replace('__OWNER__',OWNER)}else{el.textContent=el.textContent.replace('__OWNER__',OWNER)}
+  });
+  document.getElementById('sideCmd').textContent=document.getElementById('oneLine').textContent;
+  // 복사 버튼
+  document.querySelectorAll('pre.cmd').forEach(function(pre){
+    pre.dataset.copy=pre.textContent;
+    var b=document.createElement('button');b.type='button';b.textContent='복사';
+    b.addEventListener('click',function(){
+      var t=pre.dataset.copy||'';
+      var ok=function(){b.textContent='복사됨';setTimeout(function(){b.textContent='복사'},1500)};
+      try{navigator.clipboard.writeText(t.trim()).then(ok,function(){sel(pre)})}catch(e){sel(pre)}
+    });
+    pre.appendChild(b);
+  });
+  function sel(el){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r)}
+  function byCat(c){return panes.filter(function(p){return p.dataset.cat===c})}
+  var catsEl=document.getElementById('cats'),tabsEl=document.getElementById('tabs');
+  CATS.forEach(function(c){
+    var li=document.createElement('li'),b=document.createElement('button');b.type='button';b.dataset.cat=c[0];
+    b.innerHTML='<span>'+c[1]+'</span><small></small>';b.addEventListener('click',function(){show(c[0],0)});li.appendChild(b);catsEl.appendChild(li);
+  });
+  function steps(c){var a=[];(c?byCat(c):panes).forEach(function(p){p.querySelectorAll('input[data-step]').forEach(function(i){a.push(i.dataset.step)})});return a}
+  function progress(){
+    var all=steps(),n=all.filter(function(s){return done[s]}).length;
+    document.getElementById('allNum').textContent=n;document.getElementById('allTotal').textContent=all.length;
+    document.getElementById('allBar').style.width=(all.length?n/all.length*100:0)+'%';
+    var html='';
+    CATS.forEach(function(c){var s=steps(c[0]),k=s.filter(function(x){return done[x]}).length;
+      html+='<div><span>'+c[1]+'</span><span class="mini"><span style="width:'+(s.length?k/s.length*100:0)+'%"></span></span><em>'+k+'/'+s.length+'</em></div>';
+      var sm=catsEl.querySelector('[data-cat="'+c[0]+'"] small');if(sm)sm.textContent=k+'/'+s.length;});
+    document.getElementById('catBars').innerHTML=html;
+  }
+  document.querySelectorAll('input[data-step]').forEach(function(i){
+    i.checked=!!done[i.dataset.step];
+    i.addEventListener('change',function(){done[i.dataset.step]=i.checked;store.set('drc_manual_done',done);progress()});
+  });
+  function show(cat,i){
+    var list=byCat(cat);if(!list.length){cat='start';list=byCat(cat)}
+    if(i<0||i>=list.length)i=0;
+    panes.forEach(function(p){p.hidden=true});list[i].hidden=false;
+    catsEl.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-current',b.dataset.cat===cat?'true':'false')});
+    tabsEl.innerHTML='';
+    list.forEach(function(p,k){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');
+      b.setAttribute('aria-selected',k===i?'true':'false');b.textContent=p.dataset.tab;b.addEventListener('click',function(){show(cat,k)});tabsEl.appendChild(b)});
+    var ci=CATS.findIndex(function(c){return c[0]===cat});
+    var w=document.createElement('span');w.className='where';w.textContent=CATS[ci][1]+' '+(i+1)+'/'+list.length;tabsEl.appendChild(w);
+    document.getElementById('nowText').innerHTML='<b>지금 할 일</b> · '+list[i].dataset.now;
+    var nb=document.getElementById('nextBtn');
+    if(i<list.length-1){nb.textContent='다음: '+list[i+1].dataset.tab;nb.onclick=function(){show(cat,i+1)}}
+    else if(ci<CATS.length-1){nb.textContent='다음: '+CATS[ci+1][1];nb.onclick=function(){show(CATS[ci+1][0],0)}}
+    else{nb.textContent='처음으로';nb.onclick=function(){show('start',0)}}
+    document.getElementById('content').scrollTop=0;
+    store.set('drc_manual_pos',{cat:cat,i:i});
+  }
+  progress();show(pos.cat,pos.i);
+})();
+</script>

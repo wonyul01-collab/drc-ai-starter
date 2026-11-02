@@ -6,7 +6,7 @@
 
 **방법 1 — 명령 한 줄** (윈도우 키 → `PowerShell` 검색 → 열기 → 붙여 넣고 Enter)
 ```powershell
-irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/wonyul01-collab/drc-ai-starter/main/install.ps1 | iex
 ```
 
 **방법 2 — 더블클릭**: 위 초록색 [Code] → Download ZIP → 압축 풀기 → `설치.bat` 더블클릭

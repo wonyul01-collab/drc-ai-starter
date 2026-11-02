@@ -1,6 +1,6 @@
 ﻿# =====================================================================
 #  디알컴퍼니 클로드 자동화 개발 키트 - 한 번에 설치
-#  사용법 1) 인터넷에서 바로:  irm https://raw.githubusercontent.com/__OWNER__/drc-ai-starter/main/install.ps1 | iex
+#  사용법 1) 인터넷에서 바로:  irm https://raw.githubusercontent.com/wonyul01-collab/drc-ai-starter/main/install.ps1 | iex
 #  사용법 2) 내려받은 폴더에서: 설치.bat 더블클릭
 #  점검만:   install.ps1 -OnlyCheck
 #  이미 설치된 프로그램은 건너뜁니다. 여러 번 실행해도 안전합니다.
@@ -8,7 +8,7 @@
 param([switch]$OnlyCheck)
 
 $ErrorActionPreference = 'Continue'
-$Owner   = '__OWNER__'                     # 깃허브 저장소 주인(회사 계정)
+$Owner   = 'wonyul01-collab'                     # 깃허브 저장소 주인(회사 계정)
 $RepoZip = "https://github.com/$Owner/drc-ai-starter/archive/refs/heads/main.zip"
 $Work    = Join-Path $env:USERPROFILE '클로드작업'
 $Log     = Join-Path $env:TEMP ("drc_install_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + '.log')

@@ -27,7 +27,6 @@ $Apps = @(
   @{n='Git';                c='git';    id='Git.Git';                    why='작업 저장점(되돌리기), 깃허브 연결'},
   @{n='Node.js';            c='node';   id='OpenJS.NodeJS.LTS';          why='화면 게시(Vercel), 리모션·HyperFrames 영상'},
   @{n='Python 3.14';        c='python'; id='Python.Python.3.14';         why='자료 수집·계산·엑셀 만들기'},
-  @{n='GitHub CLI';         c='gh';     id='GitHub.cli';                 why='깃허브 로그인·저장소 만들기'},
   @{n='VS Code';            c='code';   id='Microsoft.VisualStudioCode'; why='만든 파일 열어 보기'},
   @{n='FFmpeg';             c='ffmpeg'; id='Gyan.FFmpeg';                why='영상·소리 변환'},
   @{n='Claude 데스크톱 앱'; p="$env:LOCALAPPDATA\AnthropicClaude"; id='Anthropic.Claude'; why='창에서 클로드 쓰기(코드 탭)'},
@@ -43,7 +42,7 @@ function Show-Status {
     $ok = if ($a.c) { Has $a.c } else { (Test-Path $a.p) -or (Installed $a.id) }
     if ($ok) { Say ("  [설치됨]  " + $a.n) Green } else { Say ("  [없음]    " + $a.n + "  → winget install --id " + $a.id) Yellow; $miss++ }
   }
-  foreach ($x in @(@{n='Claude Code';c='claude'}, @{n='Vercel CLI';c='vercel'})) {
+  foreach ($x in @(@{n='GitHub CLI';c='gh'}, @{n='Claude Code';c='claude'}, @{n='Vercel CLI';c='vercel'})) {
     if (Has $x.c) { Say ("  [설치됨]  " + $x.n) Green } else { Say ("  [없음]    " + $x.n) Yellow; $miss++ }
   }
   $font = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\Windows\Fonts", "$env:WINDIR\Fonts" -Filter 'Pretendard*' -ErrorAction SilentlyContinue
@@ -67,7 +66,7 @@ if (-not (Has 'winget')) {
   Start-Process 'ms-windows-store://pdp/?ProductId=9NBLGGH4NNS1'; return
 }
 
-$total = $Apps.Count + 5; $i = 0
+$total = $Apps.Count + 6; $i = 0
 foreach ($a in $Apps) {
   $i++; Refresh-Path
   $ok = if ($a.c) { Has $a.c } else { (Test-Path $a.p) -or (Installed $a.id) }
@@ -75,6 +74,23 @@ foreach ($a in $Apps) {
   Say "[$i/$total] $($a.n) 설치 중 … ($($a.why))" White
   winget install --id $a.id -e --silent --accept-package-agreements --accept-source-agreements --disable-interactivity *>> $Log
   if ($LASTEXITCODE -eq 0) { Say "        완료" Green } else { Say "        실패(코드 $LASTEXITCODE) - 끝난 뒤 점검 결과를 보세요" Yellow }
+}
+Refresh-Path
+
+# GitHub CLI (관리자 권한 창 없이 사용자 폴더에 설치 - winget 판은 권한 창에서 멈춘 이력)
+$i++
+if (Has 'gh') { Say "[$i/$total] GitHub CLI - 이미 있음, 건너뜀" DarkGray }
+else {
+  Say "[$i/$total] GitHub CLI 설치 중 … (깃허브 로그인·저장소 만들기)" White
+  try {
+    $gd = "$env:LOCALAPPDATA\Programs\gh"; $gz = Join-Path $env:TEMP 'gh_portable.zip'
+    $rel = Invoke-RestMethod 'https://api.github.com/repos/cli/cli/releases/latest' -UseBasicParsing
+    $url = ($rel.assets | Where-Object { $_.name -like '*_windows_amd64.zip' } | Select-Object -First 1).browser_download_url
+    Invoke-WebRequest $url -OutFile $gz -UseBasicParsing; Expand-Archive $gz $gd -Force
+    $up = [Environment]::GetEnvironmentVariable('Path', 'User')
+    if ($up -notlike "*$gd\bin*") { [Environment]::SetEnvironmentVariable('Path', "$up;$gd\bin", 'User') }
+    Say "        완료" Green
+  } catch { Say "        실패: $($_.Exception.Message)" Yellow }
 }
 Refresh-Path
 

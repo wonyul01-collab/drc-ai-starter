@@ -159,7 +159,8 @@ ol.steps{margin:6px 0 12px;padding-left:22px}ol.steps li{margin:6px 0}
 <section class="pane" data-cat="install" data-tab="한 줄로 전부 설치" data-now="명령 한 줄을 붙여 넣으면 필요한 프로그램 12가지가 전부 설치됩니다.">
   <h2>명령 한 줄로 전부 설치</h2>
   <p class="lead">이미 있는 프로그램은 건너뜁니다. 여러 번 실행해도 안전합니다. 10~25분 걸립니다.</p>
-  <ol class="steps">
+  <div class="note" id="zipFirst"><b>지금은 공유 폴더 방식으로 설치합니다.</b> 회사 공유 폴더 <code>OneDrive\클로드-공유\교육\클로드자동화키트_설치파일.zip</code>을 내 PC로 복사 → 오른쪽 클릭 '압축 풀기' → 안의 <b>설치.bat</b> 더블클릭. 명령 한 줄 방식은 회사 깃허브 저장소가 열리면 아래에 주소가 표시됩니다.</div>
+  <ol class="steps" id="oneLineSteps">
     <li>키보드 <b>윈도우 키</b> → <code>PowerShell</code> 입력 → <b>Windows PowerShell</b> 클릭(관리자로 열 필요 없음)</li>
     <li>아래 [복사]를 누르고, 파란 창에 <b>마우스 오른쪽 클릭</b>(붙여넣기) → <b>Enter</b></li>
   </ol>
@@ -581,6 +582,10 @@ claude</pre>
     if(el.tagName==='A'){el.href=el.href.replace('__OWNER__',OWNER)}else{el.textContent=el.textContent.replace('__OWNER__',OWNER)}
   });
   document.getElementById('sideCmd').textContent=document.getElementById('oneLine').textContent;
+  if(OWNER.indexOf('__')===0){
+    ['oneLine','oneLineSteps','checkLine'].forEach(function(id){var e=document.getElementById(id);if(e)e.hidden=true});
+    document.getElementById('sideCmd').textContent='공유 폴더 OneDrive\\클로드-공유\\교육\\클로드자동화키트_설치파일.zip → 압축 풀기 → 설치.bat 더블클릭';
+  } else { var zf=document.getElementById('zipFirst'); if(zf) zf.hidden=true; }
   // 복사 버튼
   document.querySelectorAll('pre.cmd').forEach(function(pre){
     pre.dataset.copy=pre.textContent;

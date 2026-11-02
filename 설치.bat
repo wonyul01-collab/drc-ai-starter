@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
-title 디알컴퍼니 클로드 자동화 키트 설치
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
+title DRC Claude kit install
+set "DRC_KIT_DIR=%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create([IO.File]::ReadAllText($env:DRC_KIT_DIR + 'install.ps1', [Text.Encoding]::UTF8)))"
 echo.
 pause

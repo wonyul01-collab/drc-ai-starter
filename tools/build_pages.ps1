@@ -8,7 +8,7 @@ $bom  = New-Object Text.UTF8Encoding $true
 foreach ($f in 'install.ps1', 'README.md', 'manual\클로드_자동화_매뉴얼.html') {
   $p = Join-Path $root $f; $t = [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
   $t = $t.Replace('__OWNER__', $Owner)
-  [IO.File]::WriteAllText($p, $t, $(if ($f -like '*.ps1') { $bom } else { $utf8 }))
+  [IO.File]::WriteAllText($p, $t, $utf8)
 }
 
 # 2) 깃허브 페이지용 완전한 HTML 문서로 감싸기

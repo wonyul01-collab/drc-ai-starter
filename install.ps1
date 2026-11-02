@@ -1,4 +1,4 @@
-﻿# =====================================================================
+# =====================================================================
 #  디알컴퍼니 클로드 자동화 개발 키트 - 한 번에 설치
 #  사용법 1) 인터넷에서 바로:  irm https://raw.githubusercontent.com/wonyul01-collab/drc-ai-starter/main/install.ps1 | iex
 #  사용법 2) 내려받은 폴더에서: 설치.bat 더블클릭
@@ -143,7 +143,8 @@ else {
 $i++
 Say "[$i/$total] 작업 폴더와 회사 규칙 깔기 … ($Work)" White
 $src = $null
-if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'starter'))) { $src = $PSScriptRoot }
+$here = if ($PSScriptRoot) { $PSScriptRoot } elseif ($env:DRC_KIT_DIR) { $env:DRC_KIT_DIR.TrimEnd('\') } else { $null }
+if ($here -and (Test-Path (Join-Path $here 'starter'))) { $src = $here }
 else {
   try {
     $z = Join-Path $env:TEMP 'drc_starter.zip'; $x = Join-Path $env:TEMP 'drc_starter_x'
